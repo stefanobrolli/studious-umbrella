@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 	
 	unsigned int D, A;  
 	double g; 
-	double xi = 1.; // We set the distance between unperturbed levels to be 1. 
+	double xi = 1.; // We set the distance between unperturbed levels to be 1. CHANGE IT IF NEEDED 
 	string approx;
 	string start_prop;
 
