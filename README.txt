@@ -1,6 +1,6 @@
 ***********************  WARNING ***********************
 
-This code does not initialize the Dyson matrix very efficiently. This limits the maximum dimension of the model space to D < 20 (at least on my 16GB laptop). I never needed to go to model spaces larger than D = 10, however, if you do need large model spaces for your research project (or any other reason) please email me at stefano.brolli@unimi.it and we can work together on a more efficient extension of the code that can handle larger model spaces.
+This code does not initialize the Dyson matrix very efficiently. This limits the maximum dimension of the model space to D < 20 (at least on my 16GB laptop). I have never needed to go to model spaces larger than D = 10, however, if you do need large model spaces for your research project (or any other reason) please email me at stefano.brolli@unimi.it. We can work together on a more efficient version of the code that can handle larger model spaces.
 
 ********************************************************
 
