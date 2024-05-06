@@ -70,7 +70,7 @@ OpRS: https://journals.aps.org/prc/abstract/10.1103/PhysRevC.105.044330
 
 The source code is found in the folder "source". To install modify the Makefile to use your C++ compiler and run "make" in source path. 
 The compilation also requires the Eigen 3.4 library. To link the Eigen libraries correctly please modify the "Basis.h" source so that the Eigen Dense 
-and Sparse libraries are properly included. 
+and Sparse libraries are properly included.
 
 *********************************************************
 
@@ -82,7 +82,9 @@ and Sparse libraries are properly included.
 
 Program usage: ./RichModSCGF D A g approx start_prop
 
-The approximation scheme (approx) can be ADC2, TDA, ADC3
+The approximation scheme (approx) can be ADC2, TDA, ADC3.
+
+The HF propagator is always computed.
 
 The starting propagator (start_prop) can be unperturbed or HF. To use the unperturbed propagator write unpert, anything else will do HF.
 
@@ -95,3 +97,32 @@ Examples:
 ./RichModSCGF 8 2 -0.2 TDA HF cats          --------> Performs TDA + OpRS + sc0  starting with a HF reference for D = 8, A = 2, g = -0.2
 
 *********************************************************
+
+
+
+
+
+******************* CODE OUTPUT **************************
+
+The code outputs on screen the final propagator (calculated with the chosen approximation scheme), the G.S. energy and the correlation energy. 
+It also outputs the same quantities for the HF propagator, regardless of the approximation scheme chosen.
+
+The propagators are displayed as s.p. removal (addition) energy and corresponding spectroscopic amplitude. 
+
+The final propagator is also printed on file in the SpProp/ folder. The hole part is stored into the "spprop_backward_sc0.dat" and the particle part 
+is stored into the "spprop_forward_sc0.dat". The first element of both files is the number of s.p. energies.
+
+The intermediate propagators calculated during the last sc0 are stored into "spprop_forward_sc0_itr*.dat" and "spprop_backward_sc0_itr*.dat". 
+The intermediate propagators generated during the OpRS procedure are not stored.
+
+The HF propagator is stored into SpProp/HF/ as "spprop_backward_HF.dat" and "spprop_forward_HF.dat". 
+
+The final OpRS propagator is stored into SpProp/OpRS/ as "spprop_backward_OpRS.dat" and "spprop_forward_OpRS.dat", with the same notation as the final 
+propagator to distinguish between particles and holes.
+
+
+The code also outputs the spectral function obtained with the final propagator into SpecFunc/.
+A file called "Model_Parameters.dat" is also produced. This file contains in order D, A, g, xi, approximation scheme, starting propagator, 
+self-consistent scheme. This is useful to know the parameters of the last run and what is exactly contained in the SpProp/ and SpecFunc/ folders..
+
+**********************************************************

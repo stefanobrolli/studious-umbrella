@@ -73,15 +73,6 @@ int main(int argc, char **argv) {
 	fout << xi << endl;
 	fout << approx << endl;
 	fout << start_prop << endl;
-
-	if (argc == 6) {
-
-		fout << "sc0" << endl;
-	}
-	else if (argc == 7) {
-
-		"OpRS + sc0"
-	}
  	
  	fout.clear();
  	fout.close();
