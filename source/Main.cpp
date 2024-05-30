@@ -1,4 +1,11 @@
-// We focus on the spin up propagator, by simmetry the spin down one is the same.
+/****************************************
+
+SCGF calculations for the Richardson pairing model
+
+Author: Stefano Brolli
+
+****************************************/
+
 
 #include <cmath>
 #include <iostream>

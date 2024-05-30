@@ -178,13 +178,13 @@ void SelfEn::PrintDyson(const SpBasis& SpBas, DenseVec& eigenvalues, DenseMat& e
 	ofstream fout_h(path + "spprop_backward_" + id + ".dat");
 	fout_h.precision(15);
 
-	fout_h << "1               " << endl; // num_rows/2
+	fout_h << "1               " << endl; 
 
 
 	ofstream fout_p(path + "spprop_forward_" + id + ".dat");
 	fout_p.precision(15);
 	
-	fout_p << "1               " << endl; // num_rows/2
+	fout_p << "1               " << endl; 
 
 
 	double num_filled = 0.;
