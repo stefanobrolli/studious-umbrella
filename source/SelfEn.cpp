@@ -699,7 +699,7 @@ void SelfEn::BuildADC3(const SpProp& G) {
 
 
 
-Eigen::Tensor<double, 8> SelfEn:: IterateCCD(const Eigen::Tensor<double, 8>& t_0, const double g_proxy, const SpProp& G, const unsigned int P) {
+Eigen::Tensor<double, 8> SelfEn:: IterateCCD(const Eigen::Tensor<double, 8>& t_0, const double g_proxy, const SpProp& G, const unsigned int P, const double alpha) {
 
 	const unsigned int D = G.X_np.cols();
 	unsigned int n_max = (D - P);
@@ -738,7 +738,6 @@ Eigen::Tensor<double, 8> SelfEn:: IterateCCD(const Eigen::Tensor<double, 8>& t_0
 	};
 
 	double tol = 1E-7;
-	double alpha = 0.4;
 
 	auto NormDiff = [](const auto& A, const auto& B) {
     
@@ -906,12 +905,14 @@ Eigen::Tensor<double, 8> SelfEn:: IterateCCD(const Eigen::Tensor<double, 8>& t_0
 
 		if (NormDiff(t, t_n) > 1.E20) {
 
-			cerr << "The calculation of t is diverging..." << endl;
+			cerr << "The calculation of t is diverging for g = " << g_proxy << endl;
 			exit(5);
 		}
 
 		//cout << NormDiff(t, t_n) << endl;
 	}
+
+	cout << "t_ij^ab amplitude converged to " << tol << " for g = " << g_proxy << endl;
 	
 	return t;
 }
@@ -960,9 +961,9 @@ void SelfEn::BuildADC3D(const SpProp& G, const unsigned int P) {
 
 	// t_0 built
 
-	//double g_proxy = 1.27;
-	//auto t_1 = IterateCCD(t_0, g_proxy, G, P);
-	auto t = IterateCCD(t_0, g, G, P);
+	//double g_proxy = 1.273;
+	//auto t_1 = IterateCCD(t_0, g_proxy, G, P, 0.4);
+	auto t = IterateCCD(t_0, g, G, P, 0.4);
 
 
 	///// Now calculate M_II and N_II

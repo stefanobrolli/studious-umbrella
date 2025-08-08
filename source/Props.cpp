@@ -250,14 +250,23 @@ void SpProp::SpecFunc(const string approx, const double g) {
 	ofstream fout_h("./SpecFunc/SpectralFunction_holes_" + approx + "_g" + to_string(g) + ".dat");
 	fout_h.precision(15);
 
+	fout_h << "#    e_k^-            SF_k^-                 Orbital" << endl;
+
+	unsigned int level = 0;
+
 	for(unsigned int itr_h = 0; itr_h < Y_kp.rows(); ++itr_h) {
 
 		for(int itr_alpha = 0; itr_alpha < Y_kp.cols(); ++itr_alpha) {
 
-			spec += pow( Y_kp(itr_h, itr_alpha) , 2);
+			if ( pow(Y_kp(itr_h, itr_alpha), 2) > 1E-10) {
+
+				spec += pow( Y_kp(itr_h, itr_alpha) , 2);
+				level = itr_alpha + 1;
+			}
+			
    		}
 
-		fout_h << esp_k(itr_h) << "  " << spec << endl;
+		fout_h << esp_k(itr_h) << "     " << spec << "     " << level << endl;
 		spec = 0.;
 	}
 
@@ -270,14 +279,20 @@ void SpProp::SpecFunc(const string approx, const double g) {
 	ofstream fout_p("./SpecFunc/SpectralFunction_particles_" + approx + "_g" + to_string(g) + ".dat");
 	fout_p.precision(15);
 
+	fout_p << "#    e_n^+            SF_n^+                 Orbital" << endl;
+
 	for(unsigned int itr_p = 0; itr_p < X_np.rows(); ++itr_p) {
 
 		for(int itr_alpha = 0; itr_alpha < X_np.cols(); ++itr_alpha) {
 
-			spec += pow(X_np(itr_p, itr_alpha), 2);
+			if ( pow(X_np(itr_p, itr_alpha), 2) > 1E-10) {
+			
+				spec += pow(X_np(itr_p, itr_alpha), 2);
+				level = itr_alpha + 1;
+			}
    		}
 
-		fout_p << esp_n(itr_p) << "  " << spec << endl;
+		fout_p << esp_n(itr_p) << "     " << spec << "     " << level << endl;
 		spec = 0.;
 	}
 

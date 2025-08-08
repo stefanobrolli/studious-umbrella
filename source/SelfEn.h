@@ -147,7 +147,7 @@ class SelfEn {
 	void BuildADC2(const SpProp&);
 	void BuildTDA(const SpProp&);
 	void BuildADC3(const SpProp&);
-	Eigen::Tensor<double, 8> IterateCCD(const Eigen::Tensor<double, 8>&, const double, const SpProp&, const unsigned int);
+	Eigen::Tensor<double, 8> IterateCCD(const Eigen::Tensor<double, 8>&, const double, const SpProp&, const unsigned int, const double);
 	void BuildADC3D(const SpProp&, const unsigned int);
 
 	
