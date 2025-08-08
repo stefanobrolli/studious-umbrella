@@ -27,7 +27,7 @@ class SpProp {
 	void Print();
 	void ChargeNewProp(const SpBasis&, const string, const string);
 	void PrintFile(const SpBasis&, const string, const string);
-	void SpecFunc();
+	void SpecFunc(const string, const double);
 	double MGK(const SpBasis&) const;
 	void GenerateOpRS();
 	

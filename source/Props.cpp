@@ -241,13 +241,13 @@ void SpProp::PrintFile(const SpBasis& SpBas, const string path, const string id)
 
 
 
-void SpProp::SpecFunc() {
+void SpProp::SpecFunc(const string approx, const double g) {
 
 	double spec = 0.;
 	
 	// Print holes
 
-	ofstream fout_h("./SpecFunc/SpectralFunction_holes.dat");
+	ofstream fout_h("./SpecFunc/SpectralFunction_holes_" + approx + "_g" + to_string(g) + ".dat");
 	fout_h.precision(15);
 
 	for(unsigned int itr_h = 0; itr_h < Y_kp.rows(); ++itr_h) {
@@ -267,7 +267,7 @@ void SpProp::SpecFunc() {
 
 	// Print particles
 
-	ofstream fout_p("./SpecFunc/SpectralFunction_particles.dat");
+	ofstream fout_p("./SpecFunc/SpectralFunction_particles_" + approx + "_g" + to_string(g) + ".dat");
 	fout_p.precision(15);
 
 	for(unsigned int itr_p = 0; itr_p < X_np.rows(); ++itr_p) {
@@ -427,8 +427,3 @@ void SpProp::GenerateOpRS() {
 
 	//cout << "The OpRS propagator has been printed!" << endl;
 }
-
-
-
-
-

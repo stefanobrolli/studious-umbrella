@@ -55,9 +55,9 @@ int main(int argc, char **argv) {
 	else {
 
 		cerr << "Program usage: ./RichModSCGF D A g approx start_prop" << endl;
-		cerr << "The approximation scheme (approx) can be ADC2, TDA, ADC3" << endl;
+		cerr << "The approximation scheme (approx) can be ADC2, TDA, ADC3, ADC3D" << endl;
 		cerr << "The starting propagator (start_prop) can be unperturbed or HF. To use the unperturbed propagator write unpert, anything else will do HF." << endl;
-		cerr << "To require OpRS add anything at the end of the line." << endl;
+		cerr << "To require OpRS add anything at the end of the line. Do not use OpRS with ADC3D" << endl;
 		cerr << "Examples:" << endl;
 		cerr << "./RichModSCGF 10 10 0.3 ADC2 unpert" << endl;
 		cerr << "./RichModSCGF 10 10 0.3 ADC3 HF OpRS" << endl;
@@ -144,8 +144,12 @@ int main(int argc, char **argv) {
 
 			SE.BuildADC3(G);	
 		}
-		else {
+		else if (approx == "ADC3D") {
 
+			SE.BuildADC3D(G, A/2);	
+		}
+		else {
+			
 			cerr << "Approximation not known..." << endl;
 			exit(4);
 		}
@@ -182,6 +186,11 @@ int main(int argc, char **argv) {
 
 				SE.BuildADC3(G);	
 			}
+			else if (approx == "ADC3D") {
+
+				cerr << "Do not use ADC3D with OpRS." << endl;
+				exit(4);	
+			}
 			else {
 
 				cerr << "Approximation not known..." << endl;
@@ -217,7 +226,7 @@ int main(int argc, char **argv) {
 	cout << "The final GS energy is E_GS = " << EGS << ".  Correlation energy = " << EGS - EHF << endl;
 	cout << "Correlation energy captured by OpRS = " << E_OpRS - EHF  << endl;
 
-	G.SpecFunc();
+	G.SpecFunc(approx, g);
 	
 	return 0;
 }

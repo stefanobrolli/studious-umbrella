@@ -5,10 +5,12 @@
 #include <fstream>
 #include <cstdio>
 #include <string>
+#include <cmath>
 
 #include "Basis.h"
 #include "Props.h"
 #include "Functions.h"
+
 
 
 class SpProp;
@@ -23,6 +25,12 @@ class M_II {
 	double& operator() (const unsigned int n1, const unsigned int n2, const unsigned int k3, const unsigned int alpha) {
 
 		return M(n1*n_max*k_max + n2*k_max + k3, alpha);
+	};
+
+
+	double& operator() (const unsigned int n, const unsigned int k, const unsigned int alpha) {
+
+		return M(n*k_max + k, alpha);
 	};
 
 
@@ -50,7 +58,10 @@ class N_II {
 		return N(alpha, k1*k_max*n_max + k2*n_max + n3);
 	};
 
+	double& operator() (const unsigned int alpha, const unsigned int k, const unsigned int n) {
 
+		return N(alpha, k*n_max + n);
+	};
 
 	public:
 
@@ -75,6 +86,10 @@ class E_gr_II {
 		return E(n1*n_max*k_max + n2*k_max + k3, n4*n_max*k_max + n5*k_max + k6);
 	};
 
+	double& operator() (const unsigned int n, const unsigned int k, const unsigned int n_p, const unsigned int k_p) {
+
+		return E(n*k_max + k, n_p*k_max + k_p);
+	};
 	
 
 	public:
@@ -97,6 +112,12 @@ class E_less_II {
 
 		return E(k1*k_max*n_max + k2*n_max + n3, k4*k_max*n_max + k5*n_max + n6);
 	};
+
+	double& operator() (const unsigned int k, const unsigned int n, const unsigned int k_p, const unsigned int n_p) {
+
+		return E(k*n_max + n, k_p*n_max + n_p);
+	};
+
 
 	public:
 
@@ -126,7 +147,8 @@ class SelfEn {
 	void BuildADC2(const SpProp&);
 	void BuildTDA(const SpProp&);
 	void BuildADC3(const SpProp&);
-	
+	Eigen::Tensor<double, 8> IterateCCD(const Eigen::Tensor<double, 8>&, const double, const SpProp&, const unsigned int);
+	void BuildADC3D(const SpProp&, const unsigned int);
 
 	
 	public:

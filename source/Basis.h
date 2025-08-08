@@ -3,8 +3,11 @@
 
 #include <complex>
 #include <vector>
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Sparse>
+#include <eigen3/unsupported/Eigen/CXX11/Tensor>
+#include <eigen3/Eigen/Eigenvalues>
+
 
 using namespace std;
 

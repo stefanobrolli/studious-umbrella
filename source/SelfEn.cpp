@@ -296,6 +296,10 @@ void SelfEn::ChargeDysMat(const SpBasis& SpBas, const unsigned int alpha) {
 	//cout << endl;
 	//cout << endl;
 
+	//cout << "alpha = " << alpha << endl;
+	//cout << M_2p1h.M.col(alpha) << endl;
+	//cout << endl;
+
 	//cout << "The Dyson matrix has dimension " << DenseDysMat_reduced.rows() << "x" << DenseDysMat_reduced.cols() << endl;
 	
 	DysMat = DenseDysMat_reduced.sparseView().pruned(10E-7);
@@ -548,7 +552,8 @@ void SelfEn::BuildTDA(const SpProp& G) {
 
 
 
-
+/* Deprecated*/
+/*
 void SelfEn::BuildADC3(const SpProp& G) {
 
 	BuildTDA(G);
@@ -601,6 +606,390 @@ void SelfEn::BuildADC3(const SpProp& G) {
 							}
 						}
 					}
+				}
+			}
+		}
+	}
+}
+*/
+
+
+
+void SelfEn::BuildADC3(const SpProp& G) {
+
+	BuildTDA(G);
+
+	// Build t0 matrix
+
+	Eigen::Tensor<double, 4> t(G.X_np.rows(), G.X_np.rows(), G.Y_kp.rows(), G.Y_kp.rows());
+	t.setZero();
+
+	for (int n1 = 0; n1 < G.X_np.rows(); ++n1) {
+		
+		for (int n2 = 0; n2 < G.X_np.rows(); ++n2) {
+	
+			for (int k3 = 0; k3 < G.Y_kp.rows(); ++k3) {
+
+				for (int k4 = 0; k4 < G.Y_kp.rows(); ++k4) {
+
+					double one_over_e = 1./(G.esp_k(k3) + G.esp_k(k4) - G.esp_n(n1) - G.esp_n(n2));
+
+					for (int alpha = 0; alpha < G.Y_kp.cols(); ++alpha) {
+
+						for (int beta = 0; beta < G.Y_kp.cols(); ++beta) {
+						
+							t(n1, n2, k3, k4) += G.X_np(n1, alpha)*G.X_np(n2, alpha)*G.Y_kp(k3, beta)*G.Y_kp(k4, beta);
+						}
+					}
+
+					t(n1, n2, k3, k4) *= -g/2.*one_over_e;
+				}
+			}
+		}
+	}
+
+	///// Now calculate M_II and N_II
+
+	for (int n1 = 0; n1 < G.X_np.rows(); ++n1) {
+		
+		for (int n2 = 0; n2 < G.X_np.rows(); ++n2) {
+	
+			for (int k3 = 0; k3 < G.Y_kp.rows(); ++k3) {
+
+				for (int alpha = 0; alpha < G.Y_kp.cols(); ++alpha) {
+
+					for (int k4 = 0; k4 < G.Y_kp.rows(); ++k4) {
+
+						for (int k5 = 0; k5 < G.Y_kp.rows(); ++k5) {
+
+							for (int gamma = 0; gamma < G.Y_kp.cols(); ++gamma) {
+
+								M_2p1h(n1, n2, k3, alpha) += -g/2*t(n1, n2, k4, k5)*G.Y_kp(k4, gamma)*G.Y_kp(k5, gamma)*G.Y_kp(k3, alpha);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for (int k1 = 0; k1 < G.Y_kp.rows(); ++k1) {
+		
+		for (int k2 = 0; k2 < G.Y_kp.rows(); ++k2) {
+	
+			for (int n3 = 0; n3 < G.X_np.rows(); ++n3) {
+
+				for (int alpha = 0; alpha < G.Y_kp.cols(); ++alpha) {
+
+					for (int n4 = 0; n4 < G.X_np.rows(); ++n4) {
+
+						for (int n5 = 0; n5 < G.X_np.rows(); ++n5) {
+
+							for (int gamma = 0; gamma < G.Y_kp.cols(); ++gamma) {
+
+								N_2h1p(alpha, k1, k2, n3) += -g/2.*t(n4, n5, k1, k2)*G.X_np(n4, gamma)*G.X_np(n5, gamma)*G.X_np(n3, alpha);	
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
+Eigen::Tensor<double, 8> SelfEn:: IterateCCD(const Eigen::Tensor<double, 8>& t_0, const double g_proxy, const SpProp& G, const unsigned int P) {
+
+	const unsigned int D = G.X_np.cols();
+	unsigned int n_max = (D - P);
+	unsigned int k_max = P;
+	
+	
+	Eigen::Tensor<double, 4> one_over_esp_ab_ij(n_max, n_max, k_max, k_max);
+	one_over_esp_ab_ij.setZero();
+
+	for (unsigned int a = 0; a < n_max; ++a) {
+
+		for (unsigned int b = 0; b < n_max; ++b) {
+		
+			for (unsigned int i = 0; i < k_max; ++i) {
+
+				for (unsigned int j = 0; j < k_max; ++j) {
+
+					one_over_esp_ab_ij(a, b, i, j) = 1./( G.esp_k(i) + G.esp_k(j) - G.esp_n(a) - G.esp_n(b));
+				}
+			}
+		}
+	}
+
+	auto v = [g_proxy](unsigned int s_1, unsigned int s_2, unsigned int s_3, unsigned int s_4) { 
+		
+		if (s_1 != s_2 && s_1 == s_3 && s_2 == s_4) {
+
+			return -g_proxy/2;
+		}
+		else if (s_1 != s_2 && s_1 != s_3 && s_2 != s_4) {
+
+			return g_proxy/2.;
+		}
+		
+		return  0.; 
+	};
+
+	double tol = 1E-7;
+	double alpha = 0.4;
+
+	auto NormDiff = [](const auto& A, const auto& B) {
+    
+		auto T = A - B;
+		const Eigen::Tensor<double, 0> frob_norm_tens = T.square().sum().sqrt();
+  		const double frob_norm = frob_norm_tens.coeff();
+
+		return frob_norm;
+	};
+
+	Eigen::Tensor<double, 8> t(t_0);
+	Eigen::Tensor<double, 8> t_n(n_max, 2, n_max, 2, k_max, 2, k_max, 2);
+
+	while ( NormDiff(t, t_n) > tol) {
+
+		t_n.setZero();
+
+		// First term
+		for (unsigned int a = 0; a < n_max; ++a) {
+
+			for (unsigned int i = 0; i < k_max; ++i) {
+
+				t_n(a, 0, a, 1, i, 0, i, 1) += -g_proxy/2;
+			}
+		}
+
+		
+		// Second term
+		for (unsigned int a = 0; a < n_max; ++a) {
+
+			for (unsigned int i = 0; i < k_max; ++i) {
+
+				for (unsigned int j = 0; j < k_max; ++j) {
+
+					for (unsigned int c = 0; c < n_max; ++c) {
+
+						for (unsigned int s_c = 0; s_c < 2; ++s_c) {
+							
+							for (unsigned int s_d = 0; s_d < 2; ++s_d) {
+
+								t_n(a, 0, a, 1, i, 0, j, 1) += 0.5*v(0, 1, s_c, s_d)*t(c, s_c, c, s_d, i, 0, j, 1);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+
+		// Third term
+		for (unsigned int a = 0; a < n_max; ++a) {
+
+			for (unsigned int b = 0; b < n_max; ++b) {
+
+				for (unsigned int i = 0; i < k_max; ++i) {
+
+					for (unsigned int k = 0; k < k_max; ++k) {
+
+						for (unsigned int s_k = 0; s_k < 2; ++s_k) {
+							
+							for (unsigned int s_l = 0; s_l < 2; ++s_l) {
+
+								t_n(a, 0, b, 1, i, 0, i, 1) += .5*v(s_k, s_l, 0, 1)*t(a, 0, b, 1, k, s_k, k, s_l);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Other terms
+		for (unsigned int a = 0; a < n_max; ++a) {
+
+			for (unsigned int b = 0; b < n_max; ++b) {
+
+				for (unsigned int i = 0; i < k_max; ++i) {
+
+					for (unsigned int j = 0; j < k_max; ++j) {
+
+						for (unsigned int k = 0; k < k_max; ++k) {
+
+							for (unsigned int s_k = 0; s_k < 2; ++s_k) {
+							
+								for (unsigned int s_l = 0; s_l < 2; ++s_l) {
+
+									for (unsigned int c = 0; c < n_max; ++c) {
+
+										for (unsigned int s_c = 0; s_c < 2; ++s_c) {
+							
+											for (unsigned int s_d = 0; s_d < 2; ++s_d) {
+
+												// Fourth term
+												t_n(a, 0, b, 1, i, 0, j, 1) += .25*v(s_k, s_l, s_c, s_d)*t(c, s_c, c, s_d, i, 0, j, 1)*t(a, 0, b, 1, k, s_k, k, s_l);
+												
+												// Fifth term
+												t_n(a, 0, b, 1, i, 0, j, 1) += v(s_k, s_l, s_c, s_d)*t(a, 0, c, s_c, i, 0, k, s_k)*t(b, 1, c, s_d, j, 1, k, s_l);
+												t_n(a, 0, b, 1, i, 0, j, 1) += -v(s_k, s_l, s_c, s_d)*t(a, 0, c, s_c, j, 1, k, s_k)*t(b, 1, c, s_d, i, 0, k, s_l);
+
+												// Sixth term
+												t_n(a, 0, b, 1, i, 0, j, 1) += -.5*v(s_k, s_l, s_c, s_d)*t(c, s_d, c, s_c, i, 0, k, s_k)*t(a, 0, b, 1, k, s_l, j, 1);
+												t_n(a, 0, b, 1, i, 0, j, 1) += .5*v(s_k, s_l, s_c, s_d)*t(c, s_d, c, s_c, j, 1, k, s_k)*t(a, 0, b, 1, k, s_l, i, 0);
+
+												// Seventh term
+												t_n(a, 0, b, 1, i, 0, j, 1) += -.5*v(s_k, s_l, s_c, s_d)*t(a, 0, c, s_c, k, s_l, k, s_k)*t(c, s_d, b, 1, i, 0, j, 1);
+												t_n(a, 0, b, 1, i, 0, j, 1) += .5*v(s_k, s_l, s_c, s_d)*t(b, 1, c, s_c, k, s_l, k, s_k)*t(c, s_d, a, 0, i, 0, j, 1);;
+
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+
+		// Prefactor
+		for (unsigned int a = 0; a < n_max; ++a) {
+
+			for (unsigned int s_a = 0; s_a < 2; ++s_a) {
+
+				for (unsigned int b = 0; b < n_max; ++b) {
+
+					for (unsigned int s_b = s_a + 1; s_b < 2; ++s_b) {
+
+						for (unsigned int i = 0; i < k_max; ++i) {
+
+							for (unsigned int s_i = 0; s_i < 2; ++s_i) {
+
+								for (unsigned int j = 0; j < k_max; ++j) {
+							
+									for (unsigned int s_j = s_i + 1; s_j < 2; ++s_j) {
+
+										t_n(a, s_a, b, s_b, i, s_i, j, s_j) *= one_over_esp_ab_ij(a, b, i, j);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+
+		// Fix antisymmetry
+		for (unsigned int a = 0; a < n_max; ++a) {
+
+			for (unsigned int b = 0; b < n_max; ++b) {
+
+				for (unsigned int i = 0; i < k_max; ++i) {
+
+					for (unsigned int j = 0; j < k_max; ++j) {
+
+						t_n(a, 1, b, 0, i, 0, j, 1) = -t_n(b, 0, a, 1, i, 0, j, 1);
+						t_n(a, 0, b, 1, i, 1, j, 0) = -t_n(a, 0, b, 1, j, 0, i, 1);
+						t_n(a, 1, b, 0, i, 1, j, 0) = t_n(b, 0, a, 1, j, 0, i, 1);
+					}
+				}
+			}
+		}
+
+		t = alpha*t_n + (1. - alpha)*t;
+
+		if (NormDiff(t, t_n) > 1.E20) {
+
+			cerr << "The calculation of t is diverging..." << endl;
+			exit(5);
+		}
+
+		//cout << NormDiff(t, t_n) << endl;
+	}
+	
+	return t;
+}
+
+
+
+
+void SelfEn::BuildADC3D(const SpProp& G, const unsigned int P) {
+
+	BuildTDA(G);
+
+	const unsigned int D = G.X_np.cols();
+	
+	// Build t0 matrix
+
+	unsigned int n_max = (D - P);
+	unsigned int k_max = P;
+
+	Eigen::Tensor<double, 8> t_0(n_max, 2, n_max, 2, k_max, 2, k_max, 2);
+	t_0.setZero();
+	
+	Eigen::Tensor<double, 2> one_over_esp_ab_ij(n_max, k_max);
+	one_over_esp_ab_ij.setZero();
+
+	for (unsigned int a = 0; a < n_max; ++a) {
+
+		for (unsigned int i = 0; i < k_max; ++i) {
+
+			one_over_esp_ab_ij(a, i) = 1./( G.esp_k(i) + G.esp_k(i) - G.esp_n(a) - G.esp_n(a) );
+		}
+	}
+
+	for (unsigned int a = 0; a < n_max; ++a) {
+		
+		for (unsigned int i = 0; i < k_max; ++i) {
+
+			double g_one_over_e = -g/2.*one_over_esp_ab_ij(a, i);
+	
+			for (unsigned int s = 0; s < 2; ++s) {
+
+				t_0(a, s, a, 1-s, i, s, i, 1-s) = g_one_over_e;
+				t_0(a, s, a, 1-s, i, 1-s, i, s) += -g_one_over_e;
+			}
+		}
+	}
+
+	// t_0 built
+
+	//double g_proxy = 1.27;
+	//auto t_1 = IterateCCD(t_0, g_proxy, G, P);
+	auto t = IterateCCD(t_0, g, G, P);
+
+
+	///// Now calculate M_II and N_II
+
+	for (int alpha = 0; alpha < P; ++alpha) {
+
+		for (int n1 = 0; n1 < n_max; ++n1) {
+
+			for (int n2 = 0; n2 < n_max; ++n2) {
+
+				for (int k4 = 0; k4 < k_max; ++k4) {
+
+					M_2p1h(n1, n2, alpha, alpha) += -g/2.*t(n1, 1, n2, 0, k4, 1, k4, 0);
+				}
+			}
+		}
+	}
+
+	for (int alpha = P; alpha < D; ++alpha) {
+	
+		for (int k1 = 0; k1 < k_max; ++k1) {
+
+			for (int k2 = 0; k2 < k_max; ++k2) {
+
+				for (int n4 = 0; n4 < G.X_np.rows(); ++n4) {
+
+					N_2h1p(alpha, k1, k2, alpha - P) += -g/2.*t(n4, 1, n4, 0, k1, 1, k2, 0);	
 				}
 			}
 		}

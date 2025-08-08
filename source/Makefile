@@ -1,14 +1,34 @@
-Main: Main.o Basis.o Props.o SelfEn.o Functions.o Basis.h Props.h SelfEn.h Functions.h 
-	g++ -O3 -o RichModSCGF  Main.o Basis.o Props.o SelfEn.o Functions.o
-Basis.o: Basis.cpp Basis.h
-	g++ -O3 -c -o Basis.o Basis.cpp 
-Props.o: Props.cpp Props.h
-	g++ -O3 -c -o Props.o Props.cpp 
-SelfEn.o: SelfEn.cpp SelfEn.h
-	g++ -O3 -c -o SelfEn.o SelfEn.cpp 
-Functions.o: Functions.cpp Functions.h 
-	g++ -O3 -c -o Functions.o Functions.cpp 
-Main.o: Main.cpp
-	g++ -O3 -c -o Main.o Main.cpp 
-clean: 
-	rm *.o RichModSCGF
+# Compiler and flags
+CC = g++
+CFLAGS = -O3 -ffast-math -march=native -flto -MMD -MP
+
+# List of source files 
+SRC = Main.cpp Basis.cpp Props.cpp SelfEn.cpp Functions.cpp
+
+# Object files (each .cpp file is compiled to a corresponding .o file)
+OBJ = $(SRC:.cpp=.o)
+
+# Dependency files (.d files are generated automatically)
+DEPS = $(OBJ:.o=.d)
+
+# Target for the final executable
+TARGET = RichModSCGF
+
+# Rule to build the executable from object files
+$(TARGET): $(OBJ)
+	$(CC) -o $@ $^ 
+
+# Rule for compiling each .cpp file into an .o file, and generate dependencies
+%.o: %.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Include dependency files if they exist
+-include $(DEPS)
+
+# Phony target to clean up generated files
+.PHONY: clean
+clean:
+	rm -f $(OBJ) $(DEPS) $(TARGET)
+
+
+

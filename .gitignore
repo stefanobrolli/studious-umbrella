@@ -1,0 +1,9 @@
+# Ignore .dat files
+source/SpProp/HF/*.dat
+source/SpProp/OpRS/*.dat
+source/SpProp/*.dat
+source/SpecFunc/*.dat
+source/*.dat
+
+# Ignore .o files
+source/*.o
