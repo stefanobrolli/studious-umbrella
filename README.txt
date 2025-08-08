@@ -45,6 +45,7 @@ This code calculates the single-particle Dyson propagator (for closed-shell syst
 2) ADC(2) (second order calculation of the irreducible self-energy)
 3) 2p-1h TDA
 4) ADC(3)
+5) ADC(3)-D (Warning: the calculation of t^ab_ij can become unstable for large values of g.)
 
 The self-consistent scheme can be chosen between sc0 (with either unperturbed or HF reference propagator) and OpRS (optimized reference state) + sc0.
 For a detailed explanation of sc0 and OpRS please see: 
@@ -54,7 +55,6 @@ OpRS: https://journals.aps.org/prc/abstract/10.1103/PhysRevC.105.044330
 
 
 *****************************************************************
-
 
 
 
@@ -117,3 +117,7 @@ The code also outputs the spectral function obtained with the final propagator i
 A file called "Model_Parameters.dat" is also produced. This file contains in order D, A, g, xi, approximation scheme, starting propagator, and self-consistent scheme. This is useful to know the parameters of the last run and what is contained in the SpProp/ and SpecFunc/ folders.
 
 **********************************************************
+
+
+
+
